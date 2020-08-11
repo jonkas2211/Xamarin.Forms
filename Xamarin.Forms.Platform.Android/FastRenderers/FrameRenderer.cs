@@ -23,6 +23,8 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 		float _defaultCornerRadius = -1f;
 		int? _defaultLabelFor;
 
+		int _height;
+		int _width;
 		bool _hasLayoutOccurred;
 		bool _disposed;
 		Frame _element;
@@ -194,7 +196,6 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 				e.NewElement.PropertyChanged += OnElementPropertyChanged;
 				UpdateShadow();
 				UpdateBackgroundColor();
-				UpdateBackground();
 				UpdateCornerRadius();
 				UpdateBorderColor();
 				UpdateClippedToBounds();
@@ -238,6 +239,14 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 			return _motionEventHelper.HandleMotionEvent(Parent, e);
 		}
 
+		protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
+		{
+			base.OnSizeChanged(w, h, oldw, oldh);
+
+			if (w != _width || h != _height)
+				UpdateBackground();
+		}
+
 		protected virtual void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			if (this.IsDisposed())
@@ -251,7 +260,6 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 			{
 				return;
 			}
-
 
 			if (e.PropertyName == Frame.HasShadowProperty.PropertyName)
 				UpdateShadow();
@@ -304,7 +312,11 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 				UpdateBackgroundColor();
 			}
 			else
-				_backgroundDrawable.UpdateBackground(background, Control.Height, Control.Width);
+			{
+				_height = Control.Height;
+				_width = Control.Width;
+				_backgroundDrawable.UpdateBackground(background, _height, _width);
+			}
 		}
 
 		void UpdateBorderColor()
