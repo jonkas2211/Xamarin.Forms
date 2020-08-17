@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Android.Content;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.Graphics.Drawables.Shapes;
 #if __ANDROID_29__
 using AndroidX.Core.View;
 using AndroidX.CardView.Widget;
@@ -26,7 +27,7 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 		bool _hasLayoutOccurred;
 		bool _disposed;
 		Frame _element;
-		GradientDrawable _backgroundDrawable;
+		GradientStrokeDrawable _backgroundDrawable;
 
 		VisualElementPackager _visualElementPackager;
 		VisualElementTracker _visualElementTracker;
@@ -180,8 +181,10 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 			if (e.NewElement != null)
 			{
 				this.EnsureId();
-				_backgroundDrawable = new GradientDrawable();
-				_backgroundDrawable.SetShape(ShapeType.Rectangle);
+				_backgroundDrawable = new GradientStrokeDrawable
+				{
+					Shape = new RectShape()
+				};
 				this.SetBackground(_backgroundDrawable);
 
 				if (_visualElementTracker == null)
@@ -286,25 +289,28 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 			if (_disposed)
 				return;
 
+			if (_backgroundDrawable.UseGradients())
+			{
+				_backgroundDrawable.Dispose();
+				_backgroundDrawable = null;
+				this.SetBackground(null);
+
+				_backgroundDrawable = new GradientStrokeDrawable
+				{
+					Shape = new RectShape()
+				};
+
+				this.SetBackground(_backgroundDrawable);
+				UpdateBorderColor();
+				UpdateCornerRadius();
+			}
+
 			Brush background = Element.Background;
 
 			if (Brush.IsNullOrEmpty(background))
-			{
-				if (_backgroundDrawable.UseGradients())
-				{
-					_backgroundDrawable.Dispose();
-					_backgroundDrawable = null;
-					this.SetBackground(null);
-
-					_backgroundDrawable = new GradientDrawable();
-					_backgroundDrawable.SetShape(ShapeType.Rectangle);
-					this.SetBackground(_backgroundDrawable);
-				}
-
 				UpdateBackgroundColor();
-			}
 			else
-				_backgroundDrawable.UpdateBackground(background, Control.Height, Control.Width);
+				_backgroundDrawable.UpdateBackground(background);
 		}
 
 		void UpdateBorderColor()
